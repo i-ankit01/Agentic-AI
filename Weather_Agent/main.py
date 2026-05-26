@@ -1,36 +1,29 @@
 import json
 import requests
 from dotenv import load_dotenv
-from langfuse.decorators import observe
-from langfuse.openai import openai
+# from langfuse.decorators import observe
+# from langfuse.openai import openai
 import os
+from openai import OpenAI
 
 
-from langsmith import traceable
+# from langsmith import traceable
 load_dotenv()
 
 # client = wrap_openai(OpenAI())
-client = openai.Client()
+client = OpenAI()
 
-@observe()
-def run_command(command):
-    result = os.system(command=command)
-    return result
-
-
-@observe()
 def get_weather(city: str):
-    # TODO!: Do an actual API Call
     print("🔨 Tool Called: get_weather", city)
     
-    url = f"https://wttr.in/{city}?format=%C+%t"
+    url = f"https://wttr.in/{city.lower()}?format=%C+%t"
     response = requests.get(url)
 
     if response.status_code == 200:
         return f"The weather in {city} is {response.text}."
     return "Something went wrong"
 
-@observe()
+
 def add(x, y):
     print("🔨 Tool Called: add", x, y)
     return x + y
@@ -40,9 +33,9 @@ avaiable_tools = {
         "fn": get_weather,
         "description": "Takes a city name as an input and returns the current weather for the city"
     },
-    "run_command": {
-        "fn": run_command,
-        "description": "Takes a command as input to execute on system and returns ouput"
+    "add": {
+        "fn": add,
+        "description": "Takes two numbers as input and returns the sum of it."
     }
 }
 
@@ -51,7 +44,7 @@ system_prompt = f"""
     You work on start, plan, action, observe mode.
     For the given user query and available tools, plan the step by step execution, based on the planning,
     select the relevant tool from the available tool. and based on the tool selection you perform an action to call the tool.
-    Wait for the observation and based on the observation from the tool call resolve the user query.
+    Wait for the observation step and based on the observation from the tool call resolve the user query.
 
     Rules:
     - Follow the Output JSON Format.
@@ -62,21 +55,22 @@ system_prompt = f"""
     {{
         "step": "string",
         "content": "string",
-        "function": "The name of function if the step is action",
+        "tool": "The name of tool if the step is action",
         "input": "The input parameter for the function",
     }}
 
     Available Tools:
     - get_weather: Takes a city name as an input and returns the current weather for the city
-    - run_command: Takes a command as input to execute on system and returns ouput
+    - add: Takes two numbers as input and returns the sum of it.
     
     Example:
-    User Query: What is the weather of new york?
-    Output: {{ "step": "plan", "content": "The user is interseted in weather data of new york" }}
+    User Query: What is the weather of delhi?
+    Output: {{ "step": "plan", "content": "The user is interseted in weather data of delhi" }}
+    Output: {{ "step": "plan", "content": "let me check the available tools to see if i can find one" }}
     Output: {{ "step": "plan", "content": "From the available tools I should call get_weather" }}
-    Output: {{ "step": "action", "function": "get_weather", "input": "new york" }}
-    Output: {{ "step": "observe", "output": "12 Degree Cel" }}
-    Output: {{ "step": "output", "content": "The weather for new york seems to be 12 degrees." }}
+    Output: {{ "step": "action", "tool": "get_weather", "input": "delhi" }}
+    Output: {{ "step": "observe", "output": "The weather at delhi is 30 C" }}
+    Output: {{ "step": "output", "content": "The weather for delhi seems to be 30 degrees." }}
 """
 
 messages = [
@@ -84,7 +78,7 @@ messages = [
 ]
 
 while True:
-    user_query = input('> ')
+    user_query = input('Ask AI >> ')
     messages.append({ "role": "user", "content": user_query })
 
     while True:
@@ -102,7 +96,7 @@ while True:
             continue
         
         if parsed_output.get("step") == "action":
-            tool_name = parsed_output.get("function")
+            tool_name = parsed_output.get("tool")
             tool_input = parsed_output.get("input")
 
             if avaiable_tools.get(tool_name, False) != False:
