@@ -29,6 +29,6 @@ def chat(query: str = Query(..., description="The query to ask the AI")):
 
 @app.get("/job_status/{job_id}")
 def job_status(job_id: str):
-    job = queue.fetch_job(job_id)
-    result = job.return_value
-    return {"status": job.get_status(), "result": result}
+    job = queue.fetch_job(job_id=job_id)
+    result = job.return_value()
+    return {"status": job.get_status(), "result": job.result}

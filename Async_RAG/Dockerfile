@@ -5,8 +5,8 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-COPY requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY Async_RAG/requirements-docker.txt ./requirements-docker.txt
+RUN pip install --no-cache-dir -r requirements-docker.txt
 
 COPY Async_RAG ./Async_RAG
 

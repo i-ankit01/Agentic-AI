@@ -1,0 +1,9 @@
+fastapi==0.115.11
+uvicorn==0.34.0
+python-dotenv==1.1.0
+rq==2.9.0
+redis==5.2.1
+openai>=2.26.0
+langchain-qdrant==1.1.0
+langchain-openai>=1.0.0
+qdrant-client==1.18.0
