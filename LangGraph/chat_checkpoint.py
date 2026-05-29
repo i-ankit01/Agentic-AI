@@ -1,11 +1,15 @@
 from dotenv import load_dotenv
+import os
 from typing import Annotated, TypedDict
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain.chat_models import init_chat_model
 from langgraph.checkpoint.mongodb import MongoDBSaver
 
+
 load_dotenv()
+
+MONGODB_URI = os.environ["MONGODB_URI"]
 
 llm = init_chat_model(
     model="gpt-4o-mini",
@@ -39,8 +43,7 @@ graph_builder.add_edge("chatbot", END)
 def compile_graph_with_checkpoint(checkpointer):
     return graph_builder.compile(checkpointer=checkpointer)
 
-
-MONGODB_URI = "mongodb+srv://ankit:uDCdC4pOeZqngMjp@cluster0.nxp5e.mongodb.net/AgeticAI"
+# MONGODB_URI=""
 with MongoDBSaver.from_conn_string(MONGODB_URI) as checkpointer:
     graph_with_checkpoint = compile_graph_with_checkpoint(checkpointer)
 
