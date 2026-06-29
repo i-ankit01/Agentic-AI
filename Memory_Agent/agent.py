@@ -46,6 +46,7 @@ while True:
         f"ID : {mem.get("id")} \n Memory : {mem.get("memory")}\n\n"
         for mem in search_memory.get("results")
     ]
+    
 
     print("Relevant Memories >> ", memories)
 
